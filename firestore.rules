@@ -1,0 +1,320 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Primitives
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // 1. UserProfile Validation Blueprint
+    function isValidUserProfile(data) {
+      return data.keys().hasAll([
+        'uid',
+        'displayName',
+        'language',
+        'speechRate',
+        'highContrast',
+        'largeText',
+        'reducedMotion',
+        'locationSharingEnabled',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'uid',
+        'displayName',
+        'language',
+        'speechRate',
+        'highContrast',
+        'largeText',
+        'reducedMotion',
+        'locationSharingEnabled',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 && data.uid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.uid == request.auth.uid &&
+      data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100 &&
+      data.language is string && data.language.size() <= 16 && data.language in ['en', 'hi', 'hinglish'] &&
+      data.speechRate is number && data.speechRate >= 0.5 && data.speechRate <= 2.0 &&
+      data.highContrast is bool &&
+      data.largeText is bool &&
+      data.reducedMotion is bool &&
+      data.locationSharingEnabled is bool &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow create: if isSignedIn() &&
+        isValidId(userId) &&
+        userId == request.auth.uid &&
+        isValidUserProfile(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isSignedIn() &&
+        isValidUserProfile(incoming()) &&
+        isValidId(userId) &&
+        userId == request.auth.uid &&
+        existing().uid == request.auth.uid &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'displayName',
+            'language',
+            'speechRate',
+            'highContrast',
+            'largeText',
+            'reducedMotion',
+            'locationSharingEnabled',
+            'updatedAt'
+          ])
+        );
+      allow delete: if isSignedIn() && isValidId(userId) && userId == request.auth.uid;
+    }
+
+    // 2. FamilyMember Validation Blueprint
+    function isValidFamilyMember(data) {
+      return data.keys().hasAll([
+        'ownerId',
+        'name',
+        'relation',
+        'phone',
+        'inviteEmail',
+        'status',
+        'lat',
+        'lng',
+        'batteryLevel',
+        'isOnline',
+        'lastUpdated',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId',
+        'name',
+        'relation',
+        'phone',
+        'inviteEmail',
+        'status',
+        'lat',
+        'lng',
+        'batteryLevel',
+        'isOnline',
+        'lastUpdated',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.ownerId == request.auth.uid &&
+      data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+      data.relation is string && data.relation.size() >= 1 && data.relation.size() <= 60 &&
+      data.phone is string && data.phone.size() >= 3 && data.phone.size() <= 30 &&
+      data.inviteEmail is string && data.inviteEmail.size() >= 3 && data.inviteEmail.size() <= 120 &&
+      data.status is string && data.status.size() <= 20 && data.status in ['invited', 'connected', 'revoked'] &&
+      data.lat is number && data.lat >= -90 && data.lat <= 90 &&
+      data.lng is number && data.lng >= -180 && data.lng <= 180 &&
+      data.batteryLevel is number && data.batteryLevel >= 0 && data.batteryLevel <= 100 &&
+      data.isOnline is bool &&
+      data.lastUpdated is string && data.lastUpdated.size() >= 1 && data.lastUpdated.size() <= 64 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    match /familyMembers/{memberId} {
+      allow get: if isSignedIn() && isValidId(memberId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() &&
+        isValidId(memberId) &&
+        isValidFamilyMember(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isSignedIn() &&
+        isValidFamilyMember(incoming()) &&
+        isValidId(memberId) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          // Action: Update Status / Revoke / Reconnect
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'isOnline', 'lastUpdated', 'updatedAt']) ||
+          // Action: Live Location & Telemetry Update
+          incoming().diff(existing()).affectedKeys().hasOnly(['lat', 'lng', 'batteryLevel', 'isOnline', 'lastUpdated', 'updatedAt']) ||
+          // Action: Edit Contact Info
+          incoming().diff(existing()).affectedKeys().hasOnly(['name', 'relation', 'phone', 'inviteEmail', 'updatedAt'])
+        );
+      allow delete: if isSignedIn() && isValidId(memberId) && existing().ownerId == request.auth.uid;
+    }
+
+    // 3. EmergencyContact Validation Blueprint
+    function isValidEmergencyContact(data) {
+      return data.keys().hasAll([
+        'ownerId',
+        'name',
+        'relation',
+        'phone',
+        'priority',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId',
+        'name',
+        'relation',
+        'phone',
+        'priority',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.ownerId == request.auth.uid &&
+      data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+      data.relation is string && data.relation.size() >= 1 && data.relation.size() <= 60 &&
+      data.phone is string && data.phone.size() >= 3 && data.phone.size() <= 30 &&
+      data.priority is number && data.priority >= 1 && data.priority <= 5 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    match /emergencyContacts/{contactId} {
+      allow get: if isSignedIn() && isValidId(contactId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() &&
+        isValidId(contactId) &&
+        isValidEmergencyContact(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isSignedIn() &&
+        isValidEmergencyContact(incoming()) &&
+        isValidId(contactId) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly(['name', 'relation', 'phone', 'priority', 'updatedAt'])
+        );
+      allow delete: if isSignedIn() && isValidId(contactId) && existing().ownerId == request.auth.uid;
+    }
+
+    // 4. SosEvent Validation Blueprint
+    function isValidSosEvent(data) {
+      return data.keys().hasAll([
+        'ownerId',
+        'triggerPhrase',
+        'lat',
+        'lng',
+        'status',
+        'notifiedContactsCount',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId',
+        'triggerPhrase',
+        'lat',
+        'lng',
+        'status',
+        'notifiedContactsCount',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.ownerId == request.auth.uid &&
+      data.triggerPhrase is string && data.triggerPhrase.size() >= 1 && data.triggerPhrase.size() <= 160 &&
+      data.lat is number && data.lat >= -90 && data.lat <= 90 &&
+      data.lng is number && data.lng >= -180 && data.lng <= 180 &&
+      data.status is string && data.status.size() <= 20 && data.status in ['active', 'resolved', 'cancelled'] &&
+      data.notifiedContactsCount is number && data.notifiedContactsCount >= 0 && data.notifiedContactsCount <= 50 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    match /sosEvents/{eventId} {
+      allow get: if isSignedIn() && isValidId(eventId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() &&
+        isValidId(eventId) &&
+        isValidSosEvent(incoming()) &&
+        incoming().status == 'active' &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isSignedIn() &&
+        isValidSosEvent(incoming()) &&
+        isValidId(eventId) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        // Terminal State Lock: once resolved or cancelled, no further updates are permitted
+        existing().status == 'active' &&
+        incoming().status in ['resolved', 'cancelled'] &&
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+        );
+      allow delete: if isSignedIn() && isValidId(eventId) && existing().ownerId == request.auth.uid;
+    }
+
+    // 5. ActivityLog Validation Blueprint
+    function isValidActivityLog(data) {
+      return data.keys().hasAll([
+        'ownerId',
+        'module',
+        'command',
+        'responseSummary',
+        'language',
+        'createdAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId',
+        'module',
+        'command',
+        'responseSummary',
+        'language',
+        'createdAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.ownerId == request.auth.uid &&
+      data.module is string && data.module.size() <= 24 && data.module in ['voice', 'camera', 'yolo', 'ocr', 'family', 'navigation', 'sos', 'glasses'] &&
+      data.command is string && data.command.size() >= 1 && data.command.size() <= 300 &&
+      data.responseSummary is string && data.responseSummary.size() >= 1 && data.responseSummary.size() <= 600 &&
+      data.language is string && data.language.size() <= 16 && data.language in ['en', 'hi', 'hinglish'] &&
+      data.createdAt is timestamp;
+    }
+
+    match /activityLogs/{logId} {
+      allow get: if isSignedIn() && isValidId(logId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() &&
+        isValidId(logId) &&
+        isValidActivityLog(incoming()) &&
+        incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isSignedIn() && isValidId(logId) && existing().ownerId == request.auth.uid;
+    }
+  }
+}

@@ -1,0 +1,151 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #F4F6FB;
+    background-image:
+      radial-gradient(circle at 12% 10%, rgba(99, 102, 241, 0.16) 0%, transparent 40%),
+      radial-gradient(circle at 88% 15%, rgba(244, 63, 94, 0.13) 0%, transparent 38%),
+      radial-gradient(circle at 50% 92%, rgba(16, 185, 129, 0.14) 0%, transparent 45%);
+    background-attachment: fixed;
+    color: #0F172A;
+    letter-spacing: 0.01em;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  .font-mono, .tabular-nums {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Vibrant Daylight Studio Surface & Orb Utilities */
+.nex-glass-panel {
+  background: rgba(255, 255, 255, 0.94);
+  border: 2px solid rgba(99, 102, 241, 0.22);
+  box-shadow:
+    0 14px 34px -10px rgba(79, 70, 229, 0.12),
+    0 4px 12px -2px rgba(15, 23, 42, 0.05);
+  backdrop-filter: blur(16px);
+}
+
+.nex-orb-glow {
+  box-shadow:
+    0 0 38px rgba(99, 102, 241, 0.42),
+    0 0 76px rgba(236, 72, 153, 0.24),
+    inset 0 0 24px rgba(99, 102, 241, 0.22);
+}
+
+.nex-orb-speaking {
+  box-shadow:
+    0 0 44px rgba(16, 185, 129, 0.48),
+    0 0 84px rgba(99, 102, 241, 0.30),
+    inset 0 0 28px rgba(16, 185, 129, 0.28);
+}
+
+/* Harmonize Sub-Component Cards in Daylight Studio Theme */
+html:not(.nex-high-contrast) main [class*="bg-[#0C1322]"],
+html:not(.nex-high-contrast) main [class*="bg-[#0B111E]"],
+html:not(.nex-high-contrast) main [class*="bg-[#091024]"],
+html:not(.nex-high-contrast) main [class*="bg-[#0B132B]"],
+html:not(.nex-high-contrast) main [class*="bg-[#0A1128]"] {
+  background-color: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+  color: #0F172A !important;
+  box-shadow: 0 10px 25px -8px rgba(79, 70, 229, 0.09);
+}
+
+html:not(.nex-high-contrast) main .bg-slate-900,
+html:not(.nex-high-contrast) main .bg-slate-900\/80,
+html:not(.nex-high-contrast) main .bg-slate-900\/70,
+html:not(.nex-high-contrast) main .bg-slate-950 {
+  background-color: #F8FAFC !important;
+  border-color: #CBD5E1 !important;
+  color: #0F172A !important;
+}
+
+html:not(.nex-high-contrast) main .text-white {
+  color: #0F172A !important;
+}
+
+html:not(.nex-high-contrast) main .text-slate-100,
+html:not(.nex-high-contrast) main .text-slate-200,
+html:not(.nex-high-contrast) main .text-slate-300 {
+  color: #1E293B !important;
+}
+
+html:not(.nex-high-contrast) main .text-slate-400 {
+  color: #475569 !important;
+}
+
+html:not(.nex-high-contrast) main .text-cyan-300,
+html:not(.nex-high-contrast) main .text-cyan-400 {
+  color: #4F46E5 !important;
+}
+
+html:not(.nex-high-contrast) main .text-emerald-300,
+html:not(.nex-high-contrast) main .text-emerald-400 {
+  color: #047857 !important;
+}
+
+/* Keep White Text Inside Solid Vibrant Action Buttons */
+html:not(.nex-high-contrast) main button[class*="from-"] .text-white,
+html:not(.nex-high-contrast) main button[class*="bg-rose-"] .text-white,
+html:not(.nex-high-contrast) main button[class*="bg-indigo-"] .text-white,
+html:not(.nex-high-contrast) main button[class*="bg-violet-"] .text-white,
+html:not(.nex-high-contrast) main button[class*="bg-emerald-"] .text-white,
+html:not(.nex-high-contrast) main .nex-keep-white {
+  color: #FFFFFF !important;
+}
+
+/* Accessibility Mode Modifiers */
+html.nex-large-text,
+html.nex-font-large {
+  font-size: 115%;
+}
+
+html.nex-xl-text,
+html.nex-font-xl {
+  font-size: 128%;
+}
+
+html.nex-high-contrast body {
+  background-color: #000000 !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+}
+
+html.nex-high-contrast .nex-glass-panel,
+html.nex-high-contrast .nex-surface {
+  background: #050505 !important;
+  border-color: #00F0FF !important;
+  border-width: 2px !important;
+  color: #FFFFFF !important;
+}
+
+html.nex-reduced-motion *,
+html.nex-reduced-motion *::before,
+html.nex-reduced-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Visible high-contrast keyboard focus ring for screen-reader and keyboard users */
+*:focus-visible {
+  outline: 3px solid #4F46E5;
+  outline-offset: 2px;
+}

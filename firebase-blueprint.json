@@ -1,0 +1,332 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Accessibility preferences and location sharing consent state for a NEX AI user.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the user."
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Display name of the user."
+        },
+        "language": {
+          "type": "string",
+          "enum": ["en", "hi", "hinglish"],
+          "maxLength": 16,
+          "description": "Preferred voice assistant language."
+        },
+        "speechRate": {
+          "type": "number",
+          "description": "Speech synthesis rate multiplier."
+        },
+        "highContrast": {
+          "type": "boolean",
+          "description": "Whether high-contrast accessibility mode is active."
+        },
+        "largeText": {
+          "type": "boolean",
+          "description": "Whether large typography mode is active."
+        },
+        "reducedMotion": {
+          "type": "boolean",
+          "description": "Whether reduced motion mode is active."
+        },
+        "locationSharingEnabled": {
+          "type": "boolean",
+          "description": "Explicit user consent flag for live family GPS location sharing."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "uid",
+        "displayName",
+        "language",
+        "speechRate",
+        "highContrast",
+        "largeText",
+        "reducedMotion",
+        "locationSharingEnabled",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "FamilyMember": {
+      "title": "FamilyMember",
+      "description": "Trusted family member in the user's Family Safety group.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of the user who owns this family member entry."
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Full name of the family member."
+        },
+        "relation": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "Relationship label (e.g., Mother, Father, Sister)."
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 30,
+          "description": "Contact phone number."
+        },
+        "inviteEmail": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Invitation email address."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["invited", "connected", "revoked"],
+          "maxLength": 20,
+          "description": "Invitation and sharing authorization status."
+        },
+        "lat": {
+          "type": "number",
+          "description": "Last known latitude."
+        },
+        "lng": {
+          "type": "number",
+          "description": "Last known longitude."
+        },
+        "batteryLevel": {
+          "type": "number",
+          "description": "Battery percentage from 0 to 100."
+        },
+        "isOnline": {
+          "type": "boolean",
+          "description": "Online telemetry flag."
+        },
+        "lastUpdated": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Human-readable or ISO timestamp of last GPS fix."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "name",
+        "relation",
+        "phone",
+        "inviteEmail",
+        "status",
+        "lat",
+        "lng",
+        "batteryLevel",
+        "isOnline",
+        "lastUpdated",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "EmergencyContact": {
+      "title": "EmergencyContact",
+      "description": "Trusted emergency contact for the SOS workflow.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of the user who owns this emergency contact."
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Emergency contact full name."
+        },
+        "relation": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "Relationship to user."
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 30,
+          "description": "Direct emergency phone number."
+        },
+        "priority": {
+          "type": "number",
+          "description": "Priority order (1-5)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "name",
+        "relation",
+        "phone",
+        "priority",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SosEvent": {
+      "title": "SosEvent",
+      "description": "Emergency SOS dispatch record with GPS coordinates and status.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of the user who triggered SOS."
+        },
+        "triggerPhrase": {
+          "type": "string",
+          "maxLength": 160,
+          "description": "Voice phrase or button action that triggered SOS."
+        },
+        "lat": {
+          "type": "number",
+          "description": "Latitude at time of emergency."
+        },
+        "lng": {
+          "type": "number",
+          "description": "Longitude at time of emergency."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "resolved", "cancelled"],
+          "maxLength": 20,
+          "description": "Lifecycle status of the SOS alert."
+        },
+        "notifiedContactsCount": {
+          "type": "number",
+          "description": "Count of emergency contacts notified."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "triggerPhrase",
+        "lat",
+        "lng",
+        "status",
+        "notifiedContactsCount",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ActivityLog": {
+      "title": "ActivityLog",
+      "description": "Voice and module interaction log entry that the user can audit or delete.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of the user who owns this activity log."
+        },
+        "module": {
+          "type": "string",
+          "enum": ["voice", "camera", "yolo", "ocr", "family", "navigation", "sos", "glasses"],
+          "maxLength": 24,
+          "description": "NEX AI module invoked."
+        },
+        "command": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Spoken or selected command."
+        },
+        "responseSummary": {
+          "type": "string",
+          "maxLength": 600,
+          "description": "Spoken assistant response summary."
+        },
+        "language": {
+          "type": "string",
+          "enum": ["en", "hi", "hinglish"],
+          "maxLength": 16,
+          "description": "Interaction language."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "module",
+        "command",
+        "responseSummary",
+        "language",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Stores per-user accessibility settings and explicit location sharing consent."
+    },
+    "/familyMembers/{memberId}": {
+      "schema": { "$ref": "#/entities/FamilyMember" },
+      "description": "Stores trusted family members, invitations, and consented live location updates."
+    },
+    "/emergencyContacts/{contactId}": {
+      "schema": { "$ref": "#/entities/EmergencyContact" },
+      "description": "Stores trusted emergency contacts for SOS dispatch."
+    },
+    "/sosEvents/{eventId}": {
+      "schema": { "$ref": "#/entities/SosEvent" },
+      "description": "Stores emergency SOS events triggered by the user."
+    },
+    "/activityLogs/{logId}": {
+      "schema": { "$ref": "#/entities/ActivityLog" },
+      "description": "Stores user-auditable voice command and vision assistance logs."
+    }
+  }
+}

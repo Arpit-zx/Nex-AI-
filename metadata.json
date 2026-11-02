@@ -1,0 +1,12 @@
+{
+  "name": "NEX AI",
+  "description": "Your Voice. Your Eyes. Your Independence. Voice-first AI accessibility platform for blind and visually impaired individuals featuring real-time scene understanding, YOLO + OpenCV object detection, smart OCR reader, family safety tracking, and voice navigation.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
